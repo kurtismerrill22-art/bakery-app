@@ -125,10 +125,16 @@ if entries:
             )
 
         with col2:
-            if st.button("Delete", key=e["id"]):
-                from storage import delete_entry
-                delete_entry(e["id"])
-                st.experimental_rerun()
+            entry_id = e.get("id", None)
+
+            if entry_id:
+                if st.button("Delete", key=f"delete_{entry_id}"):
+                    from storage import delete_entry
+                    delete_entry(entry_id)
+                    st.success("Entry deleted ✅")
+                    st.rerun()
+            else:
+                st.write("(Old entry)")
 else:
     st.write("No recent data yet.")
 # python -m streamlit run app.py
