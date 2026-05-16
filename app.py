@@ -60,6 +60,18 @@ if override:
 cost_per_cookie = batch_cost / batch_size
 
 # -------------------------
+# Additional Costs
+# -------------------------
+st.header("Additional Costs")
+
+add_extra = st.checkbox("Include additional costs (packaging, etc.)")
+
+extra_cost = 0.0
+
+if add_extra:
+    extra_cost = st.number_input("Additional total cost ($)", min_value=0.0)
+
+# -------------------------
 # Target Wage
 # -------------------------
 target = st.number_input("Target hourly wage (optional)", min_value=0.0)
@@ -69,6 +81,12 @@ target = st.number_input("Target hourly wage (optional)", min_value=0.0)
 # -------------------------
 if st.button("Calculate"):
     results = calculate_results(orders, hours, cost_per_cookie, False, 0)
+    # Add extra costs
+    results["cost"] += extra_cost
+    results["profit"] = results["revenue"] - results["cost"]
+
+    # Recalculate hourly rate after extra costs
+    results["hourly_rate"] = results["profit"] / hours if hours > 0 else 0
 
     st.header("Results")
 
@@ -77,6 +95,8 @@ if st.button("Calculate"):
     st.write(f"**Cost:** ${results['cost']:.2f}")
     st.write(f"**Profit:** ${results['profit']:.2f}")
     st.write(f"**Hourly rate:** ${results['hourly_rate']:.2f}/hr")
+    if extra_cost > 0:
+        st.write(f"**Additional costs:** ${extra_cost:.2f}")
 
     # ✅ Required price per cookie
     if target > 0 and results["cookies"] > 0:
@@ -117,15 +137,15 @@ if entries:
     # ✅ Bonus: actual hourly earned
     if total_hours > 0:
         avg_rate = total_profit / total_hours
-        st.write(f"📊 **Actual hourly earned:** ${avg_rate:.2f}/hr")
+        st.write(f"**Actual hourly earned:** ${avg_rate:.2f}/hr")
 
     # ✅ Paycheck based on hours
     if target > 0 and total_hours > 0:
         paycheck = target * total_hours
         remaining = total_profit - paycheck
 
-        st.write(f"💵 **Suggested paycheck:** ${paycheck:.2f}")
-        st.write(f"🏦 **Remaining business profit:** ${remaining:.2f}")
+        st.write(f"**Suggested paycheck:** ${paycheck:.2f}")
+        st.write(f"**Remaining business profit:** ${remaining:.2f}")
 
         if remaining < 0:
             st.error("⚠️ Warning: Paying more than total profit!")
