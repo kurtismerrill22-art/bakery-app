@@ -2,7 +2,7 @@ import streamlit as st
 from bakery_logic import calculate_results
 from storage import save_entry, get_recent_entries
 
-st.title("🍪 Bakery Pay & Profit Calculator")
+st.title("🍪 Celebrate You Pay & Profit Calculator")
 
 # -------------------------
 # Orders Section
@@ -51,12 +51,12 @@ if iced:
 else:
     batch_cost = NAKED_BATCH_COST
 
-# If user wants to customize
+# Custom override
 if override:
     batch_size = st.number_input("Cookies per batch", min_value=1, value=DEFAULT_BATCH_SIZE)
     batch_cost = st.number_input("Cost per batch ($)", min_value=0.0, value=batch_cost)
 
-# Calculate cost per cookie automatically
+# Calculate cost per cookie
 cost_per_cookie = batch_cost / batch_size
 
 # -------------------------
@@ -87,15 +87,16 @@ if st.button("Calculate"):
         st.write(f"To earn ${target:.2f}/hr, you should charge about:")
         st.success(f"${required_price:.2f} per cookie")
 
-    # Target check
+    # ✅ Target check
     if target > 0:
         if results['hourly_rate'] < target:
             st.error("⚠️ Below target hourly wage")
         else:
             st.success("✅ Meeting target hourly wage")
 
-    # ✅ Save results with name
+    # ✅ Save results with name + hours
     results["name"] = order_name if order_name else "Unnamed Order"
+    results["hours"] = hours
 
     save_entry(results)
 
@@ -108,9 +109,26 @@ entries = get_recent_entries(14)
 
 if entries:
     total_profit = sum(e["profit"] for e in entries)
+    total_hours = sum(e.get("hours", 0) for e in entries)
 
     st.write(f"**Total profit:** ${total_profit:.2f}")
-    st.write(f"💵 **Suggested paycheck:** ${total_profit:.2f}")
+    st.write(f"**Total hours worked:** {total_hours:.2f}")
+
+    # ✅ Bonus: actual hourly earned
+    if total_hours > 0:
+        avg_rate = total_profit / total_hours
+        st.write(f"📊 **Actual hourly earned:** ${avg_rate:.2f}/hr")
+
+    # ✅ Paycheck based on hours
+    if target > 0 and total_hours > 0:
+        paycheck = target * total_hours
+        remaining = total_profit - paycheck
+
+        st.write(f"💵 **Suggested paycheck:** ${paycheck:.2f}")
+        st.write(f"🏦 **Remaining business profit:** ${remaining:.2f}")
+
+        if remaining < 0:
+            st.error("⚠️ Warning: Paying more than total profit!")
 
     st.subheader("History")
 
@@ -135,6 +153,12 @@ if entries:
                     st.rerun()
             else:
                 st.write("(Old entry)")
+
 else:
     st.write("No recent data yet.")
 # python -m streamlit run app.py
+# 
+# After making changes:
+# git add .
+# git commit -m "Fix something"
+# git push
