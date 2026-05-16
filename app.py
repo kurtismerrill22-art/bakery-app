@@ -2,7 +2,7 @@ import streamlit as st
 from bakery_logic import calculate_results
 from storage import save_entry, get_recent_entries
 
-st.title("🍪 Celebrate You Pay & Profit Calculator")
+st.title("Bakery Pay & Profit Calculator")
 
 # -------------------------
 # Orders Section
